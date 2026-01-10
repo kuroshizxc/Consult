@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Appointment | ConsultLink</title>
+    <link rel="stylesheet" href="../css/student.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>Book Consultation</h2>
+
+    <label for="subjectSelect">Select Subject:</label>
+    <select id="subjectSelect">
+        <option value="">-- Select Subject --</option>
+    </select>
+
+    <label for="teacherSelect">Select Teacher:</label>
+    <select id="teacherSelect">
+        <option value="">-- Select Teacher --</option>
+    </select>
+
+    <label for="timeSelect">Select Time:</label>
+    <select id="timeSelect">
+        <option value="">-- Select Time --</option>
+    </select>
+
+    <button id="bookBtn">Book Appointment</button>
+
+    <div class="link">
+        <a href="student-dashboard.html">← Back to Dashboard</a>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+const token = localStorage.getItem("token");
+
+// Load subjects and teachers dynamically
+async function loadSubjects() {
+    const res = await fetch("http://localhost:5000/api/subjects", {
+        headers: { "Authorization": token }
+    });
+    const data = await res.json();
+    if (!data.success) return alert("Failed to load subjects");
+
+    const subjectSelect = document.getElementById("subjectSelect");
+    subjectSelect.innerHTML = `<option value="">-- Select Subject --</option>`;
+    data.subjects.forEach(s => {
+        const option = document.createElement("option");
+        option.value = s._id;
+        option.textContent = s.name;
+        subjectSelect.appendChild(option);
+    });
+}
+
+async function loadTeachers(subjectId) {
+    const res = await fetch(`http://localhost:5000/api/teachers/by-subject/${subjectId}`, {
+        headers: { "Authorization": token }
+    });
+    const data = await res.json();
+    if (!data.success) return alert("Failed to load teachers");
+
+    const teacherSelect = document.getElementById("teacherSelect");
+    teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>`;
+    data.teachers.forEach(t => {
+        const option = document.createElement("option");
+        option.value = t._id;
+        option.textContent = t.name;
+        teacherSelect.appendChild(option);
+    });
+}
+
+// Load time slots (school schedule 8 AM - 5 PM every 1 hour)
+function loadTimes() {
+    const timeSelect = document.getElementById("timeSelect");
+    timeSelect.innerHTML = `<option value="">-- Select Time --</option>`;
+    for (let h = 8; h <= 17; h++) {
+        const option = document.createElement("option");
+        const hour = h <= 12 ? h : h - 12;
+        const ampm = h < 12 ? "AM" : "PM";
+        option.value = `${hour}:00 ${ampm}`;
+        option.textContent = `${hour}:00 ${ampm}`;
+        timeSelect.appendChild(option);
+    }
+}
+
+// Event listener: when subject changes, update teachers
+document.getElementById("subjectSelect").addEventListener("change", e => {
+    const subjectId = e.target.value;
+    if (subjectId) loadTeachers(subjectId);
+    else document.getElementById("teacherSelect").innerHTML = `<option value="">-- Select Teacher --</option>`;
+});
+
+// Event listener: Book appointment
+document.getElementById("bookBtn").addEventListener("click", async () => {
+    const subjectId = document.getElementById("subjectSelect").value;
+    const teacherId = document.getElementById("teacherSelect").value;
+    const time = document.getElementById("timeSelect").value;
+
+    if (!subjectId || !teacherId || !time) return alert("Please select subject, teacher, and time");
+
+    const res = await fetch("http://localhost:5000/api/appointments/book", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": token
+        },
+        body: JSON.stringify({ subjectId, teacherId, time })
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert(data.message || "Failed to book appointment");
+
+    alert("Appointment booked successfully!");
+    window.location.href = "my-appointment.html";
+});
+
+// Initialize page
+loadSubjects();
+loadTimes();
+</script>
+</body>
+</html>

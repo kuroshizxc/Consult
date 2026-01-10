@@ -1,0 +1,97 @@
+<h2>Admin Panel</h2>
+
+<!-- Add Subject -->
+<input type="text" id="subjectName" placeholder="New Subject">
+<button id="addSubjectBtn">Add Subject</button>
+
+<ul id="subjectList"></ul>
+
+<hr>
+
+<!-- Add Teacher -->
+<input type="text" id="teacherName" placeholder="Teacher Name">
+<select id="teacherSubjectSelect"></select>
+<button id="addTeacherBtn">Add Teacher</button>
+
+<ul id="teacherList"></ul>
+
+<script>
+const token = localStorage.getItem("token");
+
+// Load subjects and teachers
+async function loadData() {
+    // Subjects
+    const resS = await fetch("http://localhost:5000/api/subject", { headers: { Authorization: token } });
+    const subjects = await resS.json();
+    const subjectList = document.getElementById("subjectList");
+    subjectList.innerHTML = "";
+    const teacherSubjectSelect = document.getElementById("teacherSubjectSelect");
+    teacherSubjectSelect.innerHTML = "";
+
+    subjects.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = s.name + " ";
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Remove";
+        delBtn.onclick = async () => {
+            await fetch(`http://localhost:5000/api/admin/subjects/${s._id}`, { method: "DELETE", headers: { Authorization: token } });
+            loadData();
+        };
+        li.appendChild(delBtn);
+        subjectList.appendChild(li);
+
+        // Populate teacher dropdown
+        const opt = document.createElement("option");
+        opt.value = s._id;
+        opt.textContent = s.name;
+        teacherSubjectSelect.appendChild(opt);
+    });
+
+    // Teachers
+    const resT = await fetch("http://localhost:5000/api/teacher/list", { headers: { Authorization: token } });
+    const teachers = await resT.json();
+    const teacherList = document.getElementById("teacherList");
+    teacherList.innerHTML = "";
+    teachers.forEach(t => {
+        const li = document.createElement("li");
+        li.textContent = t.name + " ";
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Remove";
+        delBtn.onclick = async () => {
+            await fetch(`http://localhost:5000/api/admin/teachers/${t._id}`, { method: "DELETE", headers: { Authorization: token } });
+            loadData();
+        };
+        li.appendChild(delBtn);
+        teacherList.appendChild(li);
+    });
+}
+
+// Add subject
+document.getElementById("addSubjectBtn").addEventListener("click", async () => {
+    const name = document.getElementById("subjectName").value.trim();
+    if (!name) return alert("Enter subject name");
+    await fetch("http://localhost:5000/api/admin/subjects", { 
+        method: "POST", headers: { "Content-Type":"application/json", Authorization: token },
+        body: JSON.stringify({ name })
+    });
+    document.getElementById("subjectName").value = "";
+    loadData();
+});
+
+// Add teacher
+document.getElementById("addTeacherBtn").addEventListener("click", async () => {
+    const name = document.getElementById("teacherName").value.trim();
+    const subjectId = document.getElementById("teacherSubjectSelect").value;
+    if (!name || !subjectId) return alert("Fill all fields");
+
+    await fetch("http://localhost:5000/api/admin/teachers", {
+        method: "POST", headers: { "Content-Type":"application/json", Authorization: token },
+        body: JSON.stringify({ name, subjectId })
+    });
+
+    document.getElementById("teacherName").value = "";
+    loadData();
+});
+
+loadData();
+</script>

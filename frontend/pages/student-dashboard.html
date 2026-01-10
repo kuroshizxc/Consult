@@ -1,0 +1,20 @@
+<h2>Student Dashboard</h2>
+
+<button onclick="goBook()">Book Consultation</button>
+<button onclick="goMyAppointments()">My Appointments</button>
+<button onclick="logout()">Logout</button>
+
+<script>
+function goBook() {
+  window.location.href = "book-appointment.html";
+}
+
+function goMyAppointments() {
+  window.location.href = "my-appointment.html";
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+</script>

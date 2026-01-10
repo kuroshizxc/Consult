@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard | ConsultLink</title>
+    <link rel="stylesheet" href="../css/teacher.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>Teacher Dashboard</h2>
+
+        <h3>My Appointments</h3>
+        <table border="1" width="100%" id="appointmentsTable">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Subject</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Mark Unavailable Times</h3>
+        <label>Select Time</label>
+        <select id="timeSelect">
+            <option value="">-- Select Time --</option>
+            <option value="08:00">08:00 AM</option>
+            <option value="09:00">09:00 AM</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="11:00">11:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="13:00">01:00 PM</option>
+            <option value="14:00">02:00 PM</option>
+            <option value="15:00">03:00 PM</option>
+            <option value="16:00">04:00 PM</option>
+            <option value="17:00">05:00 PM</option>
+        </select>
+        <button id="markUnavailableBtn">Mark Unavailable</button>
+
+        <div class="link">
+            <a href="login.html" onclick="logout()">Logout</a>
+        </div>
+    </div>
+
+<script src="../js/api.js"></script>
+<script>
+async function loadAppointments() {
+    const res = await fetch("http://localhost:5000/api/appointments/teacher", {
+        headers: { "Authorization": localStorage.getItem("token") }
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert("Failed to load appointments");
+
+    const tbody = document.querySelector("#appointmentsTable tbody");
+    tbody.innerHTML = "";
+
+    data.appointments.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${a.student.name}</td>
+            <td>${a.subject.name}</td>
+            <td>${a.time}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+document.getElementById("markUnavailableBtn").addEventListener("click", async () => {
+    const time = document.getElementById("timeSelect").value;
+    if (!time) return alert("Select a time to mark unavailable");
+
+    const res = await fetch("http://localhost:5000/api/teachers/unavailable", {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": localStorage.getItem("token")
+        },
+        body: JSON.stringify({ time })
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert(data.message || "Failed to mark unavailable");
+
+    alert("Time marked as unavailable!");
+    loadAppointments(); // Refresh appointments after marking
+});
+
+// Logout function
+function logout() {
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
+// Load appointments when page loads
+loadAppointments();
+</script>
+
+</body>
+</html>

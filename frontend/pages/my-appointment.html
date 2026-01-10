@@ -1,0 +1,28 @@
+<script>
+async function loadAppointments() {
+    const token = localStorage.getItem("token");
+    if (!token) return alert("You are not logged in.");
+
+    const res = await fetch("http://localhost:5000/api/appointments/my", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert(data.message || "Failed to load appointments");
+
+    const tbody = document.querySelector("#appointmentsTable tbody");
+    tbody.innerHTML = "";
+
+    data.appointments.forEach(a => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${a.subject?.name || "N/A"}</td>
+            <td>${a.teacher?.name || "N/A"}</td>
+            <td>${a.time || "N/A"}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+window.addEventListener("DOMContentLoaded", loadAppointments);
+</script>

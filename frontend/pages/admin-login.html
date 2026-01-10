@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | ConsultLink</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="card">
+    <h2>Admin Login</h2>
+    <label>Username</label>
+    <input type="text" id="adminUser" placeholder="Username">
+    <label>Password</label>
+    <input type="password" id="adminPass" placeholder="Password">
+    <button id="loginBtn">Login</button>
+  </div>
+
+<script>
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const username = document.getElementById("adminUser").value.trim();
+  const password = document.getElementById("adminPass").value.trim();
+  if (!username || !password) return alert("Fill all fields");
+
+  const res = await fetch("http://localhost:5000/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role: "admin", username, password })
+  });
+  const data = await res.json();
+  if (!data.success) return alert(data.message || "Login failed");
+
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("role", "admin");
+  window.location.href = "admin-dashboard.html";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConsultLink | Login</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Poppins, Arial;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('bg.jpg') center/cover no-repeat fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            width: 400px;
+            background: rgba(255,255,255,0.95);
+            padding: 35px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            backdrop-filter: blur(8px);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 26px;
+            color: #4b4134;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 6px 0 18px;
+            border-radius: 8px;
+            border: 1px solid #b5b5b5;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #4b4134;
+            border: none;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #322b22; }
+
+        .link {
+            text-align: center;
+            margin-top: 18px;
+        }
+
+        .link a {
+            text-decoration: none;
+            font-size: 14px;
+            color: #4b4134;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Login</h2>
+
+        <label>User Type</label>
+        <select id="role">
+            <option value="">-- Select --</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+        </select>
+
+        <!-- Student Login -->
+        <div id="studentDiv" style="display:none;">
+            <label>Student ID</label>
+            <input type="text" id="studentId" placeholder="24-0329-818">
+
+            <label>Password</label>
+            <input type="password" id="studentPass" placeholder="Password">
+        </div>
+
+        <!-- Teacher Login -->
+        <div id="teacherDiv" style="display:none;">
+            <label>Teacher Username</label>
+            <input type="text" id="teacherUser" placeholder="Teacher Name">
+
+            <label>Password</label>
+            <input type="password" id="teacherPass" placeholder="Password">
+        </div>
+
+        <button id="loginBtn">Login</button>
+
+        <div class="link">
+            <a href="register.html">Create a student account →</a>
+        </div>
+    </div>
+
+<script>
+const roleSelect = document.getElementById("role");
+const studentDiv = document.getElementById("studentDiv");
+const teacherDiv = document.getElementById("teacherDiv");
+
+const studentIdInput = document.getElementById("studentId");
+const studentPassInput = document.getElementById("studentPass");
+const teacherUserInput = document.getElementById("teacherUser");
+const teacherPassInput = document.getElementById("teacherPass");
+
+roleSelect.addEventListener("change", function () {
+    studentDiv.style.display = this.value === "student" ? "block" : "none";
+    teacherDiv.style.display = this.value === "teacher" ? "block" : "none";
+});
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+    const role = roleSelect.value;
+    if (!role) return alert("Select a role.");
+
+    let body = {};
+
+    if (role === "student") {
+        const id = studentIdInput.value.trim();
+        const pass = studentPassInput.value.trim();
+
+        const idFormat = /^\d{2}-\d{4}-\d{3}$/;
+        if (!idFormat.test(id)) return alert("Invalid ID format.");
+        if (!pass) return alert("Enter password.");
+
+        body = { role, studentId: id, password: pass };
+    } else {
+        const user = teacherUserInput.value.trim();
+        const pass = teacherPassInput.value.trim();
+        if (!user || !pass) return alert("Fill in all fields.");
+
+        body = { role, username: user, password: pass };
+    }
+
+    try {
+        const res = await fetch("http://localhost:5000/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!data.success) return alert(data.message || "Login failed.");
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", role);
+
+        window.location.href =
+            role === "student"
+            ? "student-dashboard.html"
+            : "teacher-dashboard.html";
+
+    } catch (err) {
+        alert("Cannot connect to server.");
+        console.error(err);
+    }
+});
+</script>
+
+</body>
+</html>
